@@ -1,0 +1,1 @@
+This is a fun little project to put any eBird checklists into a Strava activity.
