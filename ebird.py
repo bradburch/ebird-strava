@@ -17,6 +17,7 @@ def build_list(username: string):
     taxonomy = __get_taxonomy(code_num)
     code_species = parse(taxonomy, "speciesCode", "comName")
     species_num = __combine_species_num(code_num, code_species)
+    
     return __create_bird_list(species_num)
 
 
@@ -35,7 +36,7 @@ def __get_observations(sub_id: string) -> dict:
 
     url = f"https://api.ebird.org/v2/product/checklist/view/{sub_id}"
 
-    resp = utils.connection(url, _ebird_api_header)
+    resp = utils.connection("GET", url, _ebird_api_header)
 
     return resp["obs"]
 
@@ -46,7 +47,7 @@ def __get_taxonomy(code_num: dict):
 
     url = f"https://api.ebird.org/v2/ref/taxonomy/ebird?{codes}&fmt=json"
 
-    return utils.connection(url, _ebird_api_header)
+    return utils.connection("GET", url, _ebird_api_header)
 
 
 def __combine_species_num(code_num: dict, code_species: dict) -> dict:
