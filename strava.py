@@ -1,15 +1,16 @@
 from id_dates import IdDates
+from utils import connection
 
 import config
 import datetime
-import utils
 import json
 
 
 def refresh():
 
     url = f"https://www.strava.com/api/v3/oauth/token?client_id={config.strava_client_id}&client_secret={config.strava_client_secret}&refresh_token={config.strava_refresh_token}&grant_type=refresh_token"
-    resp = utils.connection("POST", url)
+
+    resp = connection("POST", url)
 
     print(resp)
 
@@ -21,7 +22,7 @@ def get_activities(ebird_start_date: datetime) -> list:
 
     url = f"https://www.strava.com/api/v3/activities?access_token={config.strava_access_token}&per_page=5&page=1"
 
-    resp = utils.connection("GET", url)
+    resp = connection("GET", url)
 
     activity_list = __create_activity_list(resp, ebird_start_date)
     

@@ -1,8 +1,8 @@
 from id_dates import IdDates
 
 import config
-import datetime
-import utils
+from datetime import datetime, timezone, timedelta
+from utils import connection
 
 import json
 
@@ -25,30 +25,30 @@ def get_recent_checklist(username: str) -> str:
     
     url = f"https://ebird.org/prof/lists?username={username}==&r=world"
 
-    resp = utils.connection("GET", url)
+    resp = connection("GET", url)
 
     sub_id = resp[0]["subId"]
     iso_obs_date = resp[0]["isoObsDate"]
-    start_date = datetime.datetime.fromisoformat(iso_obs_date)
-    start_date_id = {start_date: sub_id}
+    start_date = datetime.fromisoformat(iso_obs_date)
+    start_date_local = start_date.replace(tzinfo=timezone.utc)
     
-    return (start_date, sub_id)
+    return (start_date_local, sub_id)
 
-def get_observation(sub_id: str, start_date: datetime):
-    observation = __get_observations(sub_id)
+def get_ebird_dates_observation(sub_id: str, start_date: datetime):
+    observation = __get_observation(sub_id)
     elapsed_time = observation["durationHrs"]
     end_date = __calculate_end_time(start_date, elapsed_time)
     
-    bird = IdDates(sub_id, start_date, end_date)
+    ebird_id_dates = IdDates(sub_id, start_date, end_date)
 
-    return (bird, observation)
+    return (ebird_id_dates, observation["obs"])
 
 
-def __get_observations(sub_id: str) -> dict:
+def __get_observation(sub_id: str) -> dict:
 
     url = f"https://api.ebird.org/v2/product/checklist/view/{sub_id}"
 
-    resp = utils.connection("GET", url, _ebird_api_header)
+    resp = connection("GET", url, _ebird_api_header)
 
     return resp
 
@@ -59,7 +59,9 @@ def __get_taxonomy(code_num: dict):
 
     url = f"https://api.ebird.org/v2/ref/taxonomy/ebird?{codes}&fmt=json"
 
-    return utils.connection("GET", url, _ebird_api_header)
+    resp = connection("GET", url, _ebird_api_header)
+
+    return resp
 
 
 def __combine_species_num(code_num: dict, code_species: dict) -> dict:
@@ -80,7 +82,7 @@ def __create_bird_list(species_num: dict) -> str:
     
 
 def parse(response: list, key1: str, key2: str) -> dict:
-    
+
     new_dict = {}
 
     for i in range(len(response)):
@@ -90,7 +92,7 @@ def parse(response: list, key1: str, key2: str) -> dict:
 
 def __calculate_end_time(start_date, elapsed_time):
 
-    delta = datetime.timedelta(hours=elapsed_time)
+    delta = timedelta(hours=elapsed_time)
     end_date = start_date + delta
     
     return end_date
