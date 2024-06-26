@@ -1,7 +1,5 @@
-import string
-import datetime
+class IdDates: 
 
-class Activity: 
     def __init__(self, id, start_date, end_date):
         self.id = id
         self.start_date = start_date
