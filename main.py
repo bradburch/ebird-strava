@@ -17,7 +17,12 @@ def main():
         for i in range(len(activity_list)):
             if compare(activity_list[i], ebird_dates): 
                 ebird_list = build_list(observation)
-                update_activity(activity_list[i].id, ebird_list)
+                resp = update_activity(activity_list[i].id, ebird_list)
+                
+                if resp.status_code == 200:
+                    print("SUCCESS")
+                else:
+                    print(resp.json())
         
 
 if __name__ == "__main__":

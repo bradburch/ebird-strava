@@ -6,7 +6,7 @@ from requests import request
 def connection(method: str, url: str, headers={}, data={}) -> json: 
     response = request(method, url, headers=headers, data=data)
 
-    return response.json()
+    return response
 
 
 def compare(strava: IdDates, ebird: IdDates) -> bool:

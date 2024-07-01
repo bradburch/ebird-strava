@@ -26,15 +26,17 @@ def get_recent_checklist(username: str) -> str:
     url = f"https://ebird.org/prof/lists?username={username}==&r=world"
 
     resp = connection("GET", url)
+    respJson = resp.json()
 
-    sub_id = resp[0]["subId"]
-    iso_obs_date = resp[0]["isoObsDate"]
+    sub_id = respJson[0]["subId"]
+    iso_obs_date = respJson[0]["isoObsDate"]
     start_date = datetime.fromisoformat(iso_obs_date)
     start_date_local = start_date.replace(tzinfo=timezone.utc)
     
     return (start_date_local, sub_id)
 
 def get_ebird_dates_observation(sub_id: str, start_date: datetime):
+
     observation = __get_observation(sub_id)
     elapsed_time = observation["durationHrs"]
     end_date = __calculate_end_time(start_date, elapsed_time)
@@ -50,7 +52,7 @@ def __get_observation(sub_id: str) -> dict:
 
     resp = connection("GET", url, _ebird_api_header)
 
-    return resp
+    return resp.json()
 
 
 def __get_taxonomy(code_num: dict): 
@@ -61,7 +63,7 @@ def __get_taxonomy(code_num: dict):
 
     resp = connection("GET", url, _ebird_api_header)
 
-    return resp
+    return resp.json()
 
 
 def __combine_species_num(code_num: dict, code_species: dict) -> dict:
