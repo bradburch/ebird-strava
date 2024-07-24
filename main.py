@@ -7,7 +7,7 @@ from utils import compare
 
 def main():
 
-    ebird_start_date, ebird_id = get_recent_checklist(config.profile_id)
+    ebird_start_date, ebird_id = get_recent_checklist(config.profile_id)    
     refresh()
     activity_list = get_activities(ebird_start_date)
 
@@ -20,9 +20,11 @@ def main():
                 resp = update_activity(activity_list[i].id, ebird_list)
                 
                 if resp.status_code == 200:
-                    print("SUCCESS")
+                    print("Successfully updated Strava Activity.")
                 else:
                     print(resp.json())
+    else:
+        print("No matching eBird checklists and Strava activities.")
         
 
 if __name__ == "__main__":

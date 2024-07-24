@@ -8,20 +8,33 @@ import json
 
 def refresh():
 
-    url = f"https://www.strava.com/api/v3/oauth/token?client_id={config.strava_client_id}&client_secret={config.strava_client_secret}&refresh_token={config.strava_refresh_token}&grant_type=refresh_token"
+    path = "oauth/token"
+    params = {
+        "client_id": config.strava_client_id,
+        "client_secret": config.strava_client_secret,
+        "refresh_token": config.strava_refresh_token,
+        "grant_type": "refresh_token"
+    }
 
+    url = __create_url(path, params)
     resp = connection("POST", url)
     respJson = resp.json()
     print(resp.json())
 
     config.strava_access_token = respJson["access_token"]
     config.strava_refresh_token = respJson["refresh_token"]
-    
+
 
 def get_activities(ebird_start_date: datetime) -> list:
 
-    url = f"https://www.strava.com/api/v3/activities?access_token={config.strava_access_token}&per_page=5&page=1"
+    path = "activities"
+    params = {
+        "access_token": config.strava_access_token,
+        "per_page": "5",
+        "page": "1",
+    }
 
+    url = __create_url(path, params)
     resp = connection("GET", url)
     respJson = resp.json()
 
@@ -32,14 +45,19 @@ def get_activities(ebird_start_date: datetime) -> list:
 
 def update_activity(id: str, bird_list: str):
 
-    url = f"https://www.strava.com/api/v3/activities/{id}?access_token={config.strava_access_token}"
-
-    description = f"Birds seen during activity:\n" + bird_list
-
+    title = "Birds seen during activity:"
+    description = f"{title}\n" + bird_list
+    
     data = {
         "description": description
     }
 
+    path = "activities"
+    params = {
+        "access_token": config.strava_access_token,
+    }
+
+    url = __create_url(path, params, id)
     resp = connection("PUT", url, data=data)
     
     return resp
@@ -74,4 +92,15 @@ def __calculate_end_time(start_date, elapsed_time):
     return end_date
 
 
+def __create_url(path: str, params: dict, id: str = None) -> str:
 
+    strava_api_url = "https://www.strava.com/api/v3/"
+    params_list = "&".join("{}={}".format(key, value) for key, value in params.items())
+
+    url = f"{strava_api_url}{path}?"
+    if id: 
+        url = f"{url}{id}{params_list}"
+    else:
+        url = f"{url}{params_list}"
+
+    return url

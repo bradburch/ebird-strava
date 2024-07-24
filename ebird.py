@@ -1,9 +1,9 @@
 from id_dates import IdDates
 
-import config
 from datetime import datetime, timezone, timedelta
 from utils import connection
 
+import config
 import json
 
 _ebird_api_header = {
@@ -11,7 +11,7 @@ _ebird_api_header = {
     }
 
 
-def build_list(observation: json):     
+def build_list(observation: json):
 
     code_num = parse(observation, "speciesCode", "howManyStr")
     taxonomy = __get_taxonomy(code_num)
@@ -23,17 +23,27 @@ def build_list(observation: json):
 
 def get_recent_checklist(username: str) -> str: 
     
-    url = f"https://ebird.org/prof/lists?username={username}==&r=world"
+    ebird_url = f"https://ebird.org"
+
+    path = "/prof/lists"
+    params = {
+        "r": "world",
+        "username": username
+    }
+
+    url = __create_url(path, params,ebird_api_url=ebird_url)
 
     resp = connection("GET", url)
     respJson = resp.json()
 
     sub_id = respJson[0]["subId"]
     iso_obs_date = respJson[0]["isoObsDate"]
+
     start_date = datetime.fromisoformat(iso_obs_date)
     start_date_local = start_date.replace(tzinfo=timezone.utc)
     
     return (start_date_local, sub_id)
+
 
 def get_ebird_dates_observation(sub_id: str, start_date: datetime):
 
@@ -48,8 +58,10 @@ def get_ebird_dates_observation(sub_id: str, start_date: datetime):
 
 def __get_observation(sub_id: str) -> dict:
 
-    url = f"https://api.ebird.org/v2/product/checklist/view/{sub_id}"
+    path = "product/checklist/view"
+    params = {}
 
+    url = __create_url(path, params, id=sub_id)
     resp = connection("GET", url, _ebird_api_header)
 
     return resp.json()
@@ -59,8 +71,13 @@ def __get_taxonomy(code_num: dict):
     
     codes = "".join("&species=" + key for key, _ in code_num.items())
 
-    url = f"https://api.ebird.org/v2/ref/taxonomy/ebird?{codes}&fmt=json"
+    path = "ref/taxonomy/ebird"
+    params = {
+        "": codes,
+        "fmt": "json"
+    }
 
+    url = __create_url(path, params)
     resp = connection("GET", url, _ebird_api_header)
 
     return resp.json()
@@ -78,10 +95,10 @@ def __combine_species_num(code_num: dict, code_species: dict) -> dict:
 
 def __create_bird_list(species_num: dict) -> str:
 
-    bird_list = " ".join(value + " " + key + "\n" for key, value in species_num.items())
+    bird_list = "".join(value + " " + key + "\n" for key, value in species_num.items())
 
     return bird_list
-    
+
 
 def parse(response: list, key1: str, key2: str) -> dict:
 
@@ -92,9 +109,24 @@ def parse(response: list, key1: str, key2: str) -> dict:
 
     return new_dict
 
+
 def __calculate_end_time(start_date, elapsed_time):
 
     delta = timedelta(hours=elapsed_time)
     end_date = start_date + delta
     
     return end_date
+
+
+def __create_url(path: str, params: dict, ebird_api_url: str = "https://api.ebird.org/v2/", id: str = None) -> str:
+    
+    params_list = "&".join("{}={}".format(key, value) for key, value in params.items())
+
+    url = f"{ebird_api_url}{path}"
+
+    if id:
+        url = f"{url}/{id}"
+    else:
+        url = f"{url}?{params_list}"
+
+    return url
