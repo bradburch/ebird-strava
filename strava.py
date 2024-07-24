@@ -6,7 +6,7 @@ import datetime
 import json
 
 
-def refresh():
+def refresh() -> None:
 
     path = "oauth/token"
     params = {
@@ -19,7 +19,6 @@ def refresh():
     url = __create_url(path, params)
     resp = connection("POST", url)
     respJson = resp.json()
-    print(resp.json())
 
     config.strava_access_token = respJson["access_token"]
     config.strava_refresh_token = respJson["refresh_token"]
@@ -43,7 +42,7 @@ def get_activities(ebird_start_date: datetime) -> list:
     return activity_list
 
 
-def update_activity(id: str, bird_list: str):
+def update_activity(id: str, bird_list: str) -> json:
 
     title = "Birds seen during activity:"
     description = f"{title}\n" + bird_list
@@ -63,7 +62,7 @@ def update_activity(id: str, bird_list: str):
     return resp
 
 
-def __create_activity_list(activities: json, ebird_start_date: datetime):
+def __create_activity_list(activities: json, ebird_start_date: datetime) -> list:
     
     activity_list = []
 
@@ -84,7 +83,7 @@ def __create_activity_list(activities: json, ebird_start_date: datetime):
     return activity_list
 
 
-def __calculate_end_time(start_date, elapsed_time):
+def __calculate_end_time(start_date, elapsed_time) -> datetime:
 
     delta = datetime.timedelta(seconds=elapsed_time)
     end_date = start_date + delta

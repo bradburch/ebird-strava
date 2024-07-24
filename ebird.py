@@ -11,7 +11,7 @@ _ebird_api_header = {
     }
 
 
-def build_list(observation: json):
+def build_list(observation: json) -> str:
 
     code_num = parse(observation, "speciesCode", "howManyStr")
     taxonomy = __get_taxonomy(code_num)
@@ -23,7 +23,7 @@ def build_list(observation: json):
 
 def get_recent_checklist(username: str) -> str: 
     
-    ebird_url = f"https://ebird.org"
+    ebird_url = "https://ebird.org"
 
     path = "/prof/lists"
     params = {
@@ -45,7 +45,7 @@ def get_recent_checklist(username: str) -> str:
     return (start_date_local, sub_id)
 
 
-def get_ebird_dates_observation(sub_id: str, start_date: datetime):
+def get_ebird_dates_observation(sub_id: str, start_date: datetime) -> tuple:
 
     observation = __get_observation(sub_id)
     elapsed_time = observation["durationHrs"]
@@ -67,7 +67,7 @@ def __get_observation(sub_id: str) -> dict:
     return resp.json()
 
 
-def __get_taxonomy(code_num: dict): 
+def __get_taxonomy(code_num: dict) -> dict: 
     
     codes = "".join("&species=" + key for key, _ in code_num.items())
 
@@ -110,7 +110,7 @@ def parse(response: list, key1: str, key2: str) -> dict:
     return new_dict
 
 
-def __calculate_end_time(start_date, elapsed_time):
+def __calculate_end_time(start_date: datetime, elapsed_time: datetime) -> datetime:
 
     delta = timedelta(hours=elapsed_time)
     end_date = start_date + delta
