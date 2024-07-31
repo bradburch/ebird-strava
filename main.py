@@ -1,31 +1,48 @@
 import config
 
-from ebird import build_list, get_ebird_dates_observation, get_recent_checklist
-from strava import get_activities, refresh, update_activity
-from utils import compare
+from ebird import build_bird_dict, create_bird_description, get_ebird_dates_observation, get_recent_checklists
+from strava import get_recent_activities, refresh, update_activity
+from utils import add_dict, compare
 
 
 def main():
 
-    ebird_start_date, ebird_id = get_recent_checklist(config.profile_id)    
+    ebird_start_date = get_recent_checklists(config.profile_id)    
     refresh()
-    activity_list = get_activities(ebird_start_date)
+    activity_list = get_recent_activities()
 
-    if activity_list:
-        ebird_dates, observation = get_ebird_dates_observation(ebird_id, ebird_start_date)
+    ebird_checklists_with_activities = list(filter(lambda x: activity_list.get(x.start_date.date()) != None, ebird_start_date))
 
-        for i in range(len(activity_list)):
-            if compare(activity_list[i], ebird_dates): 
-                ebird_list = build_list(observation)
-                resp = update_activity(activity_list[i].id, ebird_list)
-                
-                if resp.status_code == 200:
-                    print("Successfully updated Strava Activity.")
+    if ebird_checklists_with_activities:
+        activity_species = {}
+
+        for checklist in ebird_checklists_with_activities: 
+            end_date, observation = get_ebird_dates_observation(checklist)
+            checklist.update_end_date(end_date)
+            checklist.update_obs(observation)
+
+            activity = activity_list.get(checklist.start_date.date())
+            activity_id = activity.identifier
+
+            if compare(activity, checklist):
+                bird_dict = build_bird_dict(checklist.obs)
+                if activity_id in activity_species:
+                    activity_species[activity_id] = add_dict(activity_species[activity_id], bird_dict)
                 else:
-                    print(resp.json())
+                    activity_species[activity_id] = bird_dict
+
+        for k, v in activity_species.items():
+            birds = create_bird_description(v)
+            resp = update_activity(k, birds)
+
+            if resp.status_code == 200:
+                print(f"Updated Strava activity {k}")
+            else:
+                print(f"Unable to update activity {k}")
+
     else:
-        print("No matching eBird checklists and Strava activities.")
-        
+        print("No matching Strava activities and eBird checklists!")
+
 
 if __name__ == "__main__":
     main()
