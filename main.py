@@ -33,12 +33,13 @@ def main():
 
         for k, v in activity_species.items():
             birds = create_bird_description(v)
-            resp = update_activity(k, birds)
+            print(birds)
+            # resp = update_activity(k, birds)
 
-            if resp.status_code == 200:
-                print(f"Updated Strava activity {k}")
-            else:
-                print(f"Unable to update activity {k}")
+            # if resp.status_code == 200:
+            #     print(f"Updated Strava activity {k}")
+            # else:
+            #     print(f"Unable to update activity {k}")
 
     else:
         print("No matching Strava activities and eBird checklists!")

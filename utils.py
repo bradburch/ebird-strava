@@ -26,20 +26,16 @@ def compare(strava: IdDates, ebird: IdDates) -> bool:
 
 def add_dict(current: dict, new: dict):
 
-    new_dict = {}
-    
+    new_dict = current.copy()
+
     for k, v in new.items():
-        if k in current:
-            if v.isnumeric() and current[k].isnumeric():
-                new_value = int(v) + int(current[k])
+        if k in new_dict:
+            if v.isnumeric() and new_dict[k].isnumeric():
+                new_value = int(v) + int(new_dict[k])
                 new_dict[k] = str(new_value)
-            elif not v.isnumeric() or not current[k].isnumeric():
+            elif not v.isnumeric() or not new_dict[k].isnumeric():
                 new_dict[k] = 'X'
         else:
-            new_dict[k] = v
-
-    for k, v in current.items():
-        if k not in new_dict:
             new_dict[k] = v
 
     return new_dict
