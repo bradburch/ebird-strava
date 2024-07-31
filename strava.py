@@ -24,7 +24,7 @@ def refresh() -> None:
     config.strava_refresh_token = respJson["refresh_token"]
 
 
-def get_activities(ebird_start_date: datetime) -> list:
+def get_recent_activities() -> list:
 
     path = "activities"
     params = {
@@ -37,7 +37,7 @@ def get_activities(ebird_start_date: datetime) -> list:
     resp = connection("GET", url)
     respJson = resp.json()
 
-    activity_list = __create_activity_list(respJson, ebird_start_date)
+    activity_list = __create_activity_list(respJson)
     
     return activity_list
 
@@ -62,25 +62,21 @@ def update_activity(id: str, bird_list: str) -> json:
     return resp
 
 
-def __create_activity_list(activities: json, ebird_start_date: datetime) -> list:
+def __create_activity_list(activities: json) -> dict:
     
-    activity_list = []
+    start_activity = {}
 
-    for i in range(len(activities)):
-        activity = activities[i]
-
+    for activity in activities:
+        id = activity["id"]
         start_date_local = activity["start_date_local"]
         strava_start_date = datetime.datetime.fromisoformat(start_date_local)
+        elapsed_time = activity["elapsed_time"]
+        end_date = __calculate_end_time(strava_start_date, elapsed_time)
+        act = IdDates(id, strava_start_date, end_date)
 
-        if strava_start_date.date() == ebird_start_date.date():
-            id = activity["id"]
-            elapsed_time = activity["elapsed_time"]
-            end_date = __calculate_end_time(strava_start_date, elapsed_time)
-            act = IdDates(id, strava_start_date, end_date)
-  
-            activity_list.append(act)
+        start_activity[strava_start_date.date()] = act
 
-    return activity_list
+    return start_activity
 
 
 def __calculate_end_time(start_date, elapsed_time) -> datetime:
@@ -96,10 +92,10 @@ def __create_url(path: str, params: dict, id: str = None) -> str:
     strava_api_url = "https://www.strava.com/api/v3/"
     params_list = "&".join("{}={}".format(key, value) for key, value in params.items())
 
-    url = f"{strava_api_url}{path}?"
+    url = f"{strava_api_url}{path}"
     if id: 
-        url = f"{url}{id}{params_list}"
+        url = f"{url}/{id}?{params_list}"
     else:
-        url = f"{url}{params_list}"
+        url = f"{url}?{params_list}"
 
     return url

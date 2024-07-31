@@ -11,17 +11,17 @@ _ebird_api_header = {
     }
 
 
-def build_list(observation: json) -> str:
+def build_bird_dict(observation: json) -> dict:
 
     code_num = parse(observation, "speciesCode", "howManyStr")
     taxonomy = __get_taxonomy(code_num)
     code_species = parse(taxonomy, "speciesCode", "comName")
     species_num = __combine_species_num(code_num, code_species)
     
-    return __create_bird_list(species_num)
+    return species_num
 
 
-def get_recent_checklist(username: str) -> str: 
+def get_recent_checklists(username: str) -> dict: 
     
     ebird_url = "https://ebird.org"
 
@@ -32,28 +32,40 @@ def get_recent_checklist(username: str) -> str:
     }
 
     url = __create_url(path, params,ebird_api_url=ebird_url)
-
     resp = connection("GET", url)
     respJson = resp.json()
 
-    sub_id = respJson[0]["subId"]
-    iso_obs_date = respJson[0]["isoObsDate"]
-
-    start_date = datetime.fromisoformat(iso_obs_date)
-    start_date_local = start_date.replace(tzinfo=timezone.utc)
+    start_id = __get_ids_and_starts(respJson)
     
-    return (start_date_local, sub_id)
+    return start_id
 
 
-def get_ebird_dates_observation(sub_id: str, start_date: datetime) -> tuple:
+def __get_ids_and_starts(respJson: json) -> dict:
 
-    observation = __get_observation(sub_id)
+    start_id = []
+
+    for cl in respJson:
+        iso_obs_date = cl["isoObsDate"]
+        identifier = cl["subId"]
+        start_date = datetime.fromisoformat(iso_obs_date)
+        start_date_local = start_date.replace(tzinfo=timezone.utc)
+        idDate = IdDates(identifier, start_date_local)
+
+        start_id.append(idDate)
+
+    return start_id
+
+
+def get_ebird_dates_observation(id_date: IdDates) -> tuple:
+
+    identifier = id_date.identifier
+    start_date = id_date.start_date
+
+    observation = __get_observation(identifier)
     elapsed_time = observation["durationHrs"]
     end_date = __calculate_end_time(start_date, elapsed_time)
-    
-    ebird_id_dates = IdDates(sub_id, start_date, end_date)
 
-    return (ebird_id_dates, observation["obs"])
+    return (end_date, observation["obs"])
 
 
 def __get_observation(sub_id: str) -> dict:
@@ -93,7 +105,7 @@ def __combine_species_num(code_num: dict, code_species: dict) -> dict:
     return species_num
 
 
-def __create_bird_list(species_num: dict) -> str:
+def create_bird_description(species_num: dict) -> str:
 
     bird_list = "".join(value + " " + key + "\n" for key, value in species_num.items())
 
