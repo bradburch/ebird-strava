@@ -35,9 +35,9 @@ def main():
             resp = update_activity(k, birds)
 
             if resp.status_code == 200:
-                print(f"Updated Strava activity {k}")
+                print(f"Updated Strava activity {k}: https://www.strava.com/activities/{k}")
             else:
-                print(f"Unable to update activity {k}")
+                print(f"Unable to update activity {k}: https://www.strava.com/activities/{k}")
 
     else:
         print("No matching Strava activities and eBird checklists!")
