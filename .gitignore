@@ -1,2 +1,2 @@
-config.py
+*.ini
 __pycache__/

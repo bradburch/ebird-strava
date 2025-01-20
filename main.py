@@ -1,5 +1,3 @@
-import config
-
 from ebird import build_bird_dict, create_bird_description, get_ebird_dates_observation, get_recent_checklists
 from strava import get_recent_activities, refresh, update_activity
 from utils import add_dict, compare
@@ -7,7 +5,7 @@ from utils import add_dict, compare
 
 def main():
 
-    ebird_start_date = get_recent_checklists(config.profile_id)    
+    ebird_start_date = get_recent_checklists()
     refresh()
     activity_list = get_recent_activities()
 
@@ -37,9 +35,9 @@ def main():
             resp = update_activity(k, birds)
 
             if resp.status_code == 200:
-                print(f"Updated Strava activity {k}")
+                print(f"Updated Strava activity {k}: https://www.strava.com/activities/{k}")
             else:
-                print(f"Unable to update activity {k}")
+                print(f"Unable to update activity {k}: https://www.strava.com/activities/{k}")
 
     else:
         print("No matching Strava activities and eBird checklists!")

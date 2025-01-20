@@ -1,34 +1,34 @@
 from id_dates import IdDates
 from utils import connection
 
-import config
+import configparser
 import datetime
 import json
 
+config = configparser.ConfigParser()
+config.read('config.ini')
+strava_config = config['strava']
 
 def refresh() -> None:
 
     path = "oauth/token"
     params = {
-        "client_id": config.strava_client_id,
-        "client_secret": config.strava_client_secret,
-        "refresh_token": config.strava_refresh_token,
+        "client_id": strava_config.get('strava_client_id'),
+        "client_secret": strava_config.get('strava_client_secret'),
+        "refresh_token": strava_config.get('strava_refresh_token'),
         "grant_type": "refresh_token"
     }
 
     url = __create_url(path, params)
     resp = connection("POST", url)
-    respJson = resp.json()
-
-    config.strava_access_token = respJson["access_token"]
-    config.strava_refresh_token = respJson["refresh_token"]
+    __update_config(resp.json())
 
 
 def get_recent_activities() -> list:
 
     path = "activities"
     params = {
-        "access_token": config.strava_access_token,
+        "access_token": strava_config.get('strava_access_token'),
         "per_page": "5",
         "page": "1",
     }
@@ -53,7 +53,7 @@ def update_activity(id: str, bird_list: str) -> json:
 
     path = "activities"
     params = {
-        "access_token": config.strava_access_token,
+        "access_token": strava_config.get('strava_access_token'),
     }
 
     url = __create_url(path, params, id)
@@ -99,3 +99,12 @@ def __create_url(path: str, params: dict, id: str = None) -> str:
         url = f"{url}?{params_list}"
 
     return url
+
+
+def __update_config(respJson: dict) -> None:
+
+    config.set('strava', 'strava_access_token', respJson["access_token"])
+    config.set('strava', 'strava_refresh_token', respJson["refresh_token"])
+
+    with open('config.ini', 'w') as configfile:
+        config.write(configfile)

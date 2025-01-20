@@ -3,11 +3,15 @@ from id_dates import IdDates
 from datetime import datetime, timezone, timedelta
 from utils import connection
 
-import config
+import configparser
 import json
 
+config = configparser.ConfigParser()
+config.read("config.ini")
+ebird_config = config['ebird']
+
 _ebird_api_header = {
-    'X-eBirdApiToken': config.ebird_api_token
+    'X-eBirdApiToken': ebird_config.get('ebird_api_token')
     }
 
 
@@ -21,24 +25,23 @@ def build_bird_dict(observation: json) -> dict:
     return species_num
 
 
-def get_recent_checklists(username: str) -> dict: 
+def get_recent_checklists() -> dict: 
     
     ebird_url = "https://ebird.org"
 
     path = "/prof/lists"
     params = {
         "r": "world",
-        "username": username
+        "username": ebird_config.get('ebird_profile_id')
     }
 
     url = __create_url(path, params,ebird_api_url=ebird_url)
     resp = connection("GET", url)
     respJson = resp.json()
-
     start_id = __get_ids_and_starts(respJson)
     
     return start_id
-
+ 
 
 def __get_ids_and_starts(respJson: json) -> dict:
 
